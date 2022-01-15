@@ -1,0 +1,256 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Home
+{% endblock %}
+
+{% block body %}
+<br><br>
+<div id="set_count" class="set_count" style="font-size: 2vw;">
+    <span id="cycle_plus"></span>/{{ cycle }}セット目
+</div>
+
+<div id="timer" style="font-size: 15vw;"></div>
+<div id="wait" style="font-size: 2vw;"></div><br><br>
+
+<form action="/home" id="back" method="GET" class="back">
+    <button style="font-size: 2vw;">設定に戻る</button>
+</form>
+
+<form id="form" action="/home" method="post" class="form">
+    <button id="start" onclick="count()" style="font-size: 5vw;">start</button>
+</form>
+
+
+<span id="rest_button" class="rest_button">
+    <button id="rest" class="rest" style="font-size: 2vw;">
+    大休憩{{ rest }}分<br>
+    あと<span id="rest_times"></span>回
+    </button>
+</span><br><br><br><br><br>
+
+
+<b><設定></b><br>
+作業時間：{{ hour }}時間{{ minute }}分<br>
+インターバル(小休憩)：{{ interval }}分<br>
+サイクル：{{ cycle }}セット<br>
+休憩時間(大)：{{ rest }}分<br>
+休憩回数：{{ rest_times }}回<br>
+
+<br><br>
+
+<!-- https://otologic.jp/ -->
+<audio id="audioElement" src="/static/music1.mp3"></audio>
+<audio id="audioElement2" src="/static/music2.mp3"></audio>
+<audio id="audioElement3" src="/static/music3.mp3"></audio>
+
+
+<!-- timer script -->
+<script>
+    // 作業中タイマーの時間を取得
+    let hour = {{ py_js_hour | tojson }}; // get from inde.html
+    let min = {{ py_js_minute | tojson }};
+    let Min_interval = {{ py_js_interval | tojson }};
+    let Min = min + hour * 60; // hour convert to Min
+    let Sec = 0;
+    let Sec_interval = 0;
+
+    // サイクル（セット）を取得
+    let cycle = {{ py_js_cycle | tojson }};
+    let cycle_plus = 1;
+    document.getElementById("cycle_plus").innerHTML = cycle_plus;
+
+    // 休憩中タイマー用の時間を取得
+    let Min_rest = {{ py_js_rest | tojson }};
+    let Sec_rest = 0;
+    let rest_times = {{ py_js_rest_times | tojson }};
+    document.getElementById("rest_times").innerHTML = rest_times;
+
+    // 大休憩(rest)ボタンの初期設定
+    const rest_button = document.querySelector("#rest");
+    rest_button.disabled = true;
+
+    // sound
+    const music1 = new Audio("/static/music1.mp3"); // 作業タイマーstart
+    const music2 = new Audio("/static/music2.mp3#t0.1,5.0"); // 作業タイマーend（インターバルタイマースタート）
+    const music3 = new Audio("/static/music3.mp3"); // last 一番最後の終了
+
+    // 作業用タイマーを表示
+    if (Min > 99){ // 100分以上
+        Min = Min;
+    }
+    else{ // 99分以下
+        Min = ('0' + Min).slice(-2); // 0で埋める
+    }
+    Sec = ('0' + Sec).slice(-2);
+    let msg = Min +":" +Sec;
+    document.getElementById("timer").innerHTML = msg;  // 作業用タイマーを表示
+
+    var timer1;
+    var timer2; // interval
+    var timer3; // rest
+    var audioElem;
+
+    function startTimer(){
+        timer1 = setInterval('count()', 1000); // １秒ごとに特定の処理を実行。1000ミリ秒＝１秒
+    }
+
+    function startTimer2(){
+        timer2 = setInterval('count_interval()', 1000);
+    }
+
+    function stopTimer(){
+        clearInterval(timer1);
+        clearInterval(timer2);
+    }
+
+    // startボタンが押されたとき→タイマースタート、startボタンを消す
+    document.addEventListener('DOMContentLoaded', function(){
+        document.querySelector('#start').addEventListener('click', function(){
+            document.querySelector('#form').innerHTML = ''; // startボタンを消す
+                // 休憩ボタンを使えるようにする
+                rest_button.disabled = false;
+                // セット数だけ作業とインターバルのタイマーを繰り返す
+                startTimer();
+        });
+    });
+
+    // 大休憩(rest)ボタンが押されたとき
+    document.addEventListener('DOMContentLoaded', function(){
+        document.querySelector('#rest').addEventListener('click', function(){
+            rest();
+        });
+    });
+
+    function count(){ // 作業タイマーのカウントダウン
+        if (Min < 0){ //値が負（２セット目以降）→MinとSecを初期化
+            Min = min;
+            Sec = 0;
+        }
+
+        document.getElementById("timer").style.color = 'ffffff'; // 文字色を黒（白）に
+
+        if (Min > 99){ // 100分以上
+            Min = Min;
+        }
+        else{ // 99分以下
+            Min = ('0' + Min).slice(-2); // 0で埋める
+        }
+        Sec = ('0' + Sec).slice(-2);
+        let msg = Min +":" +Sec;
+        document.getElementById("timer").innerHTML = msg;
+
+        if (Sec == 0 && Min == 0){ // 終了
+            clearInterval(timer1); // 作業のタイマーを止める サイクルが最後の時→インターバルは取らずそのままま終了
+
+            if (cycle_plus != cycle){ // サイクルがラストでないとき→休憩timerを表示→スタート
+                music2.play(); // アラーム
+                timer2 = setInterval('count_interval()', 1000); // 休憩タイマーに
+            }
+            else{ // サイクルがラストの時
+                let msg = "00:00";
+                document.getElementById("timer").innerHTML = msg;
+                stopTimer();
+                music3.play();
+                alert('お疲れさまでした！！！')
+            }
+        }
+
+        if (Sec == 0){ // Minを59Secに変換
+            Min = Min - 1;
+            Sec = 60;
+        }
+        Sec = Sec - 1;
+    }
+
+    function count_interval(){ // interval用のタイマーカウントダウン
+        if (Min_interval < 0){
+            Min_interval = {{ py_js_interval | tojson }};
+            Sec_interval = 0;
+        }
+
+        document.getElementById("timer").style.color = '1b70b5'; // 文字色を青に
+
+        Min_interval = ('0' + Min_interval).slice(-2);
+        Sec_interval = ('0' + Sec_interval).slice(-2);
+        let msg = Min_interval +":" +Sec_interval;
+        document.getElementById("timer").innerHTML = msg; // 休憩の時のタイマーの色を変える
+
+        if (Sec_interval == 0 && Min_interval == 0){ // 終了
+            cycle_plus += 1; // セットのカウントをプラス
+            document.getElementById("cycle_plus").innerHTML = cycle_plus; // 表示もプラス
+
+            clearInterval(timer2);
+            music1.play();
+
+            timer1 = setInterval('count()', 1000);
+        }
+
+        if (Sec_interval == 0){ // Minを59Secに変換
+            Min_interval = Min_interval - 1;
+            Sec_interval = 60;
+        }
+        Sec_interval = Sec_interval - 1;
+    }
+
+    function rest(){ // 大休憩（rest）ボタンが押されたとき
+        if (rest_times == 1){ // 大休憩ボタンを消す
+            document.getElementById("rest_button").innerHTML = '';
+        }
+        else{ //回数を更新
+            document.getElementById("rest_times").innerHTML = rest_times-1;
+            rest_times -= 1;
+            rest_button.disabled = true; // 大休憩ボタン使えないように
+        }
+
+        //それまでのタイマーを止める
+        stopTimer();
+
+        // 大休憩時間表示
+        let nowTime = new Date();
+        let nowHour = nowTime.getHours();
+        let nowMin = nowTime.getMinutes();
+
+        if (Min_rest +nowMin < 60){
+            let Hour_clo = ('0' +nowHour).slice(-2);
+            let Min_clo = ('0' + (nowMin +Min_rest)).slice(-2);
+            let clo = Hour_clo + ":" +Min_clo;
+            document.getElementById("wait").innerHTML = '休憩中' + clo +'まで';
+        }
+        else if (Min_rest +nowMin > 120){
+            let Hour_clo = ('0' +(nowHour +2)).slice(-2);
+            let Min_clo = ('0' + nowMin).slice(-2);
+            let clo = Hour_clo + ":" +Min_clo;
+            document.getElementById("wait").innerHTML = '休憩中' + clo +'まで';
+        }
+        else { //60~119
+            let Hour_clo = ('0' +(nowHour +1)).slice(-2);
+            let Min_clo = ('0' + (nowMin +Min_rest - 60)).slice(-2);
+            let clo = Hour_clo + ":" +Min_clo;
+            document.getElementById("wait").innerHTML = '休憩中' + clo +'まで';
+        }
+
+        // 設定時間だけ待機
+        setTimeout('WaitRest()' , 1000 * Min_rest * 60);
+    }
+
+    function WaitRest(){
+        // 表示を消す
+        document.getElementById("wait").innerHTML = ' '
+
+        music1.play(); // 音を鳴らす（休憩終了の合図）
+        rest_button.disabled = false; // 大休憩ボタン再び使えるように
+
+        // 元のタイマーをスタートさせる
+        if (Min==-1 && Sec==59){ // =インターバル中
+            startTimer2();
+        }
+        else{
+            startTimer(); // 作業中
+        }
+    }
+
+</script>
+
+{% endblock %}
+

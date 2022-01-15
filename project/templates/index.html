@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Setting
+{% endblock %}
+
+{% block body %}
+<br><br>
+<form action="/" method="POST">
+        <b><設定></b>
+        <ul>作業時間：<input name="hour" autocomplete="off" autofocus type="number" min="0" max="10" placeholder="hour" step="1" value="0"> 時間
+                     <input name="minute" autocomplete="off" type="number" min="0" max="59" placeholder="minute" step="5" value="25">分</ul>
+        <ul>インターバル(小休憩)：<input name="interval" autocomplete="off" type="number" min="1" max="59" placeholder="interval" step="1" value="5">分</ul>
+        <ul>サイクル：<input name="cycle" autocomplete="off" type="number" min="1" max="25" placeholder="set" step="1" value="8">セット</ul>
+        <ul>休憩時間：<input name="rest" autocomplete="off" type="number" min="0" max="120" placeholder="resttime" step="10" value="0">分</ul>
+        <ul>休憩回数：<input name="rest_times" autocomplete="off" type="number" min="0" max="5" placeholder="times" step="1" value="0">回</ul>
+    <button type="submit" style="font-size: 2vw;">決定</button>
+</form>
+
+{% endblock %}

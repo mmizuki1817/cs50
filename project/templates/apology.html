@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Apology
+{% endblock %}
+
+{% block body %}
+
+{{ message }}<br>
+ヒント：{{ hint }}
+
+<form action="/apology" id="back" method="POST"><button id="back">設定に戻る</button></form>
+
+
+{% endblock %}

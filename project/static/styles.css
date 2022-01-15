@@ -1,0 +1,67 @@
+/* https://www.keshikan.net/fonts.html */
+@font-face {
+  font-family: "timer font";
+  src: url("DSEG14Classic-Bold.woff2") format("woff2");
+}
+
+/* https://moji-waku.com/togalite/ */
+@font-face{
+    font-family: "header font";
+    src: url("Togalite-Bold.otf") format("opentype");
+}
+
+body{
+    margin-top: 80px;
+    background-color: #000000;
+    text-align:center;
+    color: #ffffff;
+}
+
+header{
+    background-image: url(header.jpg);
+    text-align: left;
+    font-size: 5vw;
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    color: #ffffff;
+    font-family: "header font";
+}
+
+
+
+footer{
+    background-color: #000000;
+    color: #ffffff;
+
+    position: fixed;
+    bottom: 3px;
+    width: 100%;
+    font-size: small;
+}
+
+#timer{
+    font-family: "timer font";
+}
+
+#set_count{
+    position: absolute;
+    left:10%;
+}
+
+#back{
+    display: inline;
+    position: absolute;
+    left: 15%;
+}
+#form{
+    display: inline;
+    position: absolute;
+    left: 44%;
+}
+#rest{
+    display: inline;
+    position: absolute;
+    right: 15%;
+}
