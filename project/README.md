@@ -1,8 +1,5 @@
 # Pomodoro Timer
 
-### Video Demo:https: //www.youtube.com/watch?v=BzqGV2VUhHk
-### URL:https://mmizuki1817.pythonanywhere.com/
-
 
 ### Description
 
